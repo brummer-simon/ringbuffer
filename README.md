@@ -1,4 +1,4 @@
-# ringbuffer
+# Statically allocated, generic Ringbuffer
 Small statically allocated ringbuffer implemented while learning rust.
 
 I wrote this to get familiar with Rust, if you want to use it, feel free
