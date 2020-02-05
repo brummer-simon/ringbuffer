@@ -64,6 +64,10 @@ impl<T: Copy, const N: usize> Ringbuffer<T, { N }> {
     pub fn free(&self) -> usize {
         N - self.used
     }
+
+    pub fn size(&self) -> usize {
+        N
+    }
 }
 
 #[cfg(test)]
@@ -158,5 +162,15 @@ mod tests {
 
         rbuf.push(1).unwrap();
         assert_eq!(rbuf.free(), 2);
+    }
+
+    #[test]
+    fn test_size() {
+        // Expected Behavior:
+        // Size must always return the number of elements the type was
+        // constructed with
+        assert_eq!(Ringbuffer::<u32, 0>::new().size(), 0);
+        assert_eq!(Ringbuffer::<u32, 1>::new().size(), 1);
+        assert_eq!(Ringbuffer::<u32, 2>::new().size(), 2);
     }
 }
