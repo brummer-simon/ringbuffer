@@ -1,25 +1,30 @@
 #![no_std]
 #![feature(const_generics)]
 
-// Interface
-/*
-pub trait RingBufferIf<T>
-{
-    fn push(&mut self, val: T) -> Result<(), T>;
-    fn pop(&mut self) -> Result<T, ()>;
-    fn free(&self) -> usize;
-}
-*/
+// +-----------------------------------------------------+
+// | Ringbuffer trait: No allocation policy              |
+// +-----------------------------------------------------+
+pub trait Ringbuffer {
+    type Item;
 
-// Implementation
-pub struct Ringbuffer<T, const N: usize> {
+    fn push(&mut self, val: Self::Item) -> Result<(), Self::Item>;
+    fn pop(&mut self) -> Result<Self::Item, ()>;
+    fn free(&self) -> usize;
+    fn size(&self) -> usize;
+}
+
+
+// +-----------------------------------------------------+
+// | ArrayRingbuffer implementation                      |
+// +-----------------------------------------------------+
+pub struct ArrayRingbuffer<T, const N: usize> {
     buffer: [T; N],
     rpos: usize,
     wpos: usize,
     used: usize,
 }
 
-impl<T: Copy, const N: usize> Ringbuffer<T, { N }> {
+impl<T: Copy, const N: usize> ArrayRingbuffer<T, { N }> {
     pub fn new() -> Self {
         Self {
             buffer: unsafe { core::mem::zeroed() },
@@ -28,8 +33,16 @@ impl<T: Copy, const N: usize> Ringbuffer<T, { N }> {
             used: 0,
         }
     }
+}
 
-    pub fn push(&mut self, val: T) -> Result<(), T> {
+
+// +-----------------------------------------------------+
+// | Ringbuffer trait implementation for ArrayRingbuffer |
+// +-----------------------------------------------------+
+impl<T: Copy, const N: usize>  Ringbuffer for ArrayRingbuffer<T, { N }> {
+    type Item = T;
+
+    fn push(&mut self, val: T) -> Result<(), T> {
         if self.used >= N {
             return Err(val);
         }
@@ -44,7 +57,7 @@ impl<T: Copy, const N: usize> Ringbuffer<T, { N }> {
         Ok(())
     }
 
-    pub fn pop(&mut self) -> Result<T, ()> {
+    fn pop(&mut self) -> Result<T, ()> {
         if self.used <= 0 {
             return Err(());
         }
@@ -61,25 +74,28 @@ impl<T: Copy, const N: usize> Ringbuffer<T, { N }> {
         Ok(val)
     }
 
-    pub fn free(&self) -> usize {
-        N - self.used
+    fn free(&self) -> usize {
+        self.size() - self.used
     }
 
-    pub fn size(&self) -> usize {
+    fn size(&self) -> usize {
         N
     }
 }
 
+// +-----------------------------------------------------+
+// | Unittests                                           |
+// +-----------------------------------------------------+
 #[cfg(test)]
 mod tests {
-    use super::Ringbuffer;
+    use super::*;
 
     #[test]
     fn test_push() {
         // Expected Behavior:
         // A ring buffer of size 5 must allow push 5 times before returning
         // Err. Err must contain the value push was called with.
-        let mut rbuf = Ringbuffer::<u32, 5>::new();
+        let mut rbuf = ArrayRingbuffer::<u32, 5>::new();
         assert_eq!(rbuf.push(1), Ok(()));
         assert_eq!(rbuf.push(2), Ok(()));
         assert_eq!(rbuf.push(3), Ok(()));
@@ -94,7 +110,7 @@ mod tests {
         // Pop on an empty Ringbuffer must return Err. If values were
         // pushed into the Ringbuffer, pop must return the values keeping the
         // order the values were pushed.
-        let mut rbuf = Ringbuffer::<u32, 5>::new();
+        let mut rbuf = ArrayRingbuffer::<u32, 5>::new();
 
         assert_eq!(rbuf.pop(), Err(()));
 
@@ -127,16 +143,10 @@ mod tests {
         // With each successful push, free must decrease by 1
         // With each successful pop, free must increase by 1
         // If push or pop failed , free must not change.
-        let mut rbuf = Ringbuffer::<u32, 5>::new();
+        let mut rbuf = ArrayRingbuffer::<u32, 3>::new();
 
-        assert_eq!(rbuf.free(), 5);
+        assert_eq!(rbuf.free(), 3);
         let _ = rbuf.pop();
-        assert_eq!(rbuf.free(), 5);
-
-        rbuf.push(1).unwrap();
-        assert_eq!(rbuf.free(), 4);
-
-        rbuf.push(1).unwrap();
         assert_eq!(rbuf.free(), 3);
 
         rbuf.push(1).unwrap();
@@ -148,9 +158,6 @@ mod tests {
         rbuf.push(1).unwrap();
         assert_eq!(rbuf.free(), 0);
 
-        let _ = rbuf.push(1);
-        assert_eq!(rbuf.free(), 0);
-
         rbuf.pop().unwrap();
         assert_eq!(rbuf.free(), 1);
 
@@ -160,17 +167,14 @@ mod tests {
         rbuf.pop().unwrap();
         assert_eq!(rbuf.free(), 3);
 
-        rbuf.push(1).unwrap();
-        assert_eq!(rbuf.free(), 2);
     }
 
     #[test]
     fn test_size() {
         // Expected Behavior:
-        // Size must always return the number of elements the type was
-        // constructed with
-        assert_eq!(Ringbuffer::<u32, 0>::new().size(), 0);
-        assert_eq!(Ringbuffer::<u32, 1>::new().size(), 1);
-        assert_eq!(Ringbuffer::<u32, 2>::new().size(), 2);
+        // Size must always return the number of elements the type was constructed with
+        assert_eq!(ArrayRingbuffer::<u32, 0>::new().size(), 0);
+        assert_eq!(ArrayRingbuffer::<u32, 1>::new().size(), 1);
+        assert_eq!(ArrayRingbuffer::<u32, 2>::new().size(), 2);
     }
 }
