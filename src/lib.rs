@@ -13,7 +13,6 @@ pub trait Ringbuffer {
     fn size(&self) -> usize;
 }
 
-
 // +-----------------------------------------------------+
 // | ArrayRingbuffer implementation                      |
 // +-----------------------------------------------------+
@@ -35,11 +34,10 @@ impl<T: Copy, const N: usize> ArrayRingbuffer<T, { N }> {
     }
 }
 
-
 // +-----------------------------------------------------+
 // | Ringbuffer trait implementation for ArrayRingbuffer |
 // +-----------------------------------------------------+
-impl<T: Copy, const N: usize>  Ringbuffer for ArrayRingbuffer<T, { N }> {
+impl<T: Copy, const N: usize> Ringbuffer for ArrayRingbuffer<T, { N }> {
     type Item = T;
 
     fn push(&mut self, val: T) -> Result<(), T> {
@@ -166,7 +164,6 @@ mod tests {
 
         rbuf.pop().unwrap();
         assert_eq!(rbuf.free(), 3);
-
     }
 
     #[test]
@@ -176,5 +173,25 @@ mod tests {
         assert_eq!(ArrayRingbuffer::<u32, 0>::new().size(), 0);
         assert_eq!(ArrayRingbuffer::<u32, 1>::new().size(), 1);
         assert_eq!(ArrayRingbuffer::<u32, 2>::new().size(), 2);
+    }
+
+    #[test]
+    fn test_custom_type() {
+        #[derive(Copy, Clone, Debug, PartialEq)]
+        struct CustomType {
+            i: i32,
+            f: f32,
+        }
+
+        let val1 = CustomType { i: 2, f: 3.14 };
+        let val2 = CustomType { i: 42, f: -1.32 };
+
+        let mut rbuf = ArrayRingbuffer::<CustomType, 2>::new();
+
+        assert_eq!(rbuf.push(val1), Ok(()));
+        assert_eq!(rbuf.push(val2), Ok(()));
+
+        assert_eq!(rbuf.pop(), Ok(val1));
+        assert_eq!(rbuf.pop(), Ok(val2));
     }
 }
