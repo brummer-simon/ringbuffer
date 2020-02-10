@@ -73,6 +73,9 @@ impl<T: Copy, const N: usize> Ringbuffer for ArrayRingbuffer<T, { N }> {
 mod tests {
     use super::*;
 
+    extern crate test;
+    use test::Bencher;
+
     #[test]
     fn test_push() {
         // Expected Behavior:
@@ -178,5 +181,22 @@ mod tests {
 
         assert_eq!(rbuf.pop(), Ok(val1));
         assert_eq!(rbuf.pop(), Ok(val2));
+    }
+
+    #[bench]
+    fn benchmark_push_pop_ints(b: &mut Bencher) {
+        let mut rbuf = ArrayRingbuffer::<usize, 100>::new();
+
+        b.iter(|| {
+            let size = rbuf.size();
+
+            for i in 0..size {
+                rbuf.push(i).unwrap();
+            }
+
+            for _ in 0..size {
+                rbuf.pop().unwrap();
+            }
+        });
     }
 }

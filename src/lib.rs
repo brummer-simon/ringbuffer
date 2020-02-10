@@ -1,6 +1,7 @@
 // Declare crate attributes.
 #![no_std]
 #![feature(const_generics)]
+#![feature(test)]
 
 // Declare crate modules. A module must be declared here to be built.
 mod traits;

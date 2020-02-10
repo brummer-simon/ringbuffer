@@ -1,4 +1,4 @@
-.PHONEY: clean test format
+.PHONEY: clean test format doc
 
 clean:
 	rm -r target
@@ -9,5 +9,9 @@ doc:
 test:
 	cargo test -- --nocapture
 
+benchmark:
+	cargo bench -- --nocapture
+
 format:
 	cargo fmt --all
+
