@@ -1,17 +1,20 @@
 // Import Ringbuffer Trait from top level module
 use crate::traits::Ringbuffer;
 
-// +-----------------------------------------------------+
-// | ArrayRingbuffer implementation                      |
-// +-----------------------------------------------------+
+
+/// Array based implementation of Ringbuffer
 pub struct ArrayRingbuffer<T, const N: usize> {
-    buffer: [T; N],
-    rpos: usize,
-    wpos: usize,
-    used: usize,
+    buffer: [T; N],    // Array used to store objects
+    rpos: usize,       // Current read position
+    wpos: usize,       // Current write position
+    used: usize,       // Number of used slots in buffer
 }
 
 impl<T: Copy, const N: usize> ArrayRingbuffer<T, { N }> {
+    /// Creator method for ArrayRingbuffer
+    ///
+    /// # Returns
+    /// * ArrayRingbuffer object ready to use.
     pub fn new() -> Self {
         Self {
             buffer: unsafe { core::mem::zeroed() },
@@ -22,9 +25,6 @@ impl<T: Copy, const N: usize> ArrayRingbuffer<T, { N }> {
     }
 }
 
-// +-----------------------------------------------------+
-// | Ringbuffer trait implementation for ArrayRingbuffer |
-// +-----------------------------------------------------+
 impl<T: Copy, const N: usize> Ringbuffer for ArrayRingbuffer<T, { N }> {
     type Item = T;
 
@@ -69,9 +69,6 @@ impl<T: Copy, const N: usize> Ringbuffer for ArrayRingbuffer<T, { N }> {
     }
 }
 
-// +-----------------------------------------------------+
-// | Unittests                                           |
-// +-----------------------------------------------------+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,11 +1,11 @@
-// Declare create attributes.
+// Declare crate attributes.
 #![no_std]
 #![feature(const_generics)]
 
-// Declare create modules. A module must be declared here to be built.
-mod ringbuffer_impl;
+// Declare crate modules. A module must be declared here to be built.
 mod traits;
+mod ringbuffer_impl;
 
-// Export symbols from modules to create API.
-pub use ringbuffer_impl::ArrayRingbuffer;
+// Export symbols from modules to crate API.
 pub use traits::Ringbuffer;
+pub use ringbuffer_impl::ArrayRingbuffer;
